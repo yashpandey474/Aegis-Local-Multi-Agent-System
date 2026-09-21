@@ -1,17 +1,32 @@
 from code.llm import LocalLLM
 from code.agents.analyst import AnalystAgent
 import logging
+from code.tools.calculator import CalculatorTool
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 def main() -> None:
     llm = LocalLLM()
-    analyst = AnalystAgent(llm)
-    response = analyst.run(
-        "What are the main advantages and limitations of retrieval-augmented generation?"
+    calculator = CalculatorTool()
+
+    analyst = AnalystAgent(
+        llm=llm,
+        calculator=calculator
     )
-    print(f"Agent: {analyst.name}")
-    print(f"Model: {response.model}")
-    print(f"\n{response.content}")
+
+
+    response = analyst.run(
+        "Revenue increased from 10 billion to 18 billion "
+        "over a period of 5 years. What was the CAGR?"
+    )
+
+    logger.info(f"Agent: {analyst.name}")
+    logger.info(f"Model: {response.model}")
+    logger.info(f"\n{response.content}")
 
 if __name__ == "__main__":
     main()
