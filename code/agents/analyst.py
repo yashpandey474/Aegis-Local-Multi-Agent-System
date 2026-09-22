@@ -1,7 +1,7 @@
 from code.agents.base import Agent
 from code.llm.ollama import LLMResponse, LocalLLM
 from code.agents.constants import ANALYST_AGENT_PROMPT
-from code.tools.calculator import CalculatorTool
+from code.tools import CalculatorTool, ToolRegistry
 import logging
 
 logger = logging.getLogger(__name__)
@@ -10,22 +10,25 @@ class AnalystAgent(Agent):
     def __init__(
             self,
             llm: LocalLLM,
-            calculator: CalculatorTool,
+            tools: ToolRegistry,
         ) -> None:
         super().__init__(
             name="analyst",
             description="Ananlyzes questions and produces structured reasoning and conclusions."
         )
         self.llm = llm
-        self.calculator = calculator
+        self.tools = tools
 
     def run(self, task: str) -> LLMResponse:
         prompt = ANALYST_AGENT_PROMPT.format(task=task)
         response = self.llm.generate(prompt)
         logger.info(f"Response from LLM: {response.content}")
+
         if response.content.startswith("TOOL: calculator"):
             expression = self._extract_expression(response.content)
-            result = self.calculator.execute(expression=expression)
+            calculator = self.tools.get("calculator")
+            result = calculator.execute(expression=expression)
+            
             logger.info(f"Calculator tool invoked with: {expression}. Result: {result}")
 
             follow_up_prompt = f"""You are the Analyst Agent.

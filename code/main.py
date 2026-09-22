@@ -1,7 +1,7 @@
 from code.llm import LocalLLM
 from code.agents.analyst import AnalystAgent
 import logging
-from code.tools.calculator import CalculatorTool
+from code.tools.calculator import CalculatorTool, ToolRegistry
 
 logging.basicConfig(
     level=logging.INFO,
@@ -13,9 +13,12 @@ def main() -> None:
     llm = LocalLLM()
     calculator = CalculatorTool()
 
+    tools = ToolRegistry()
+    tools.register(CalculatorTool())
+
     analyst = AnalystAgent(
         llm=llm,
-        calculator=calculator
+        tools=tools
     )
 
 
