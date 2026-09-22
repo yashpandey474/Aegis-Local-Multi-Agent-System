@@ -7,6 +7,8 @@ ANALYST_AGENT_PROMPT = """
     calculator(expression)
     - Performs mathematical calculations.
     - Use it whenevre an exact calculation is required.
+    - Use +, -, *, /, and ^ for arithmetic and exponentiation.
+
 
     Task:
     {task}
