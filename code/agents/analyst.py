@@ -46,7 +46,7 @@ class AnalystAgent(Agent):
             """
 
             follow_up_response = self.llm.generate(follow_up_prompt)
-            logger.info(f"Response from LLM: {follow_up_response}")
+            logger.info(f"Follow up response from LLM: {follow_up_response}")
             return follow_up_response
 
         return response
