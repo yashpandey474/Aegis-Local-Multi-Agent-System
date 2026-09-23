@@ -20,3 +20,20 @@ ANALYST_AGENT_PROMPT = """
 
     Otherwise, answer the task normally.
 """
+
+ANALYST_AGENT_FOLLOW_UP_PROMPT = """You are the Analyst Agent.
+
+    Original task:
+    {task}
+
+    You requested the calculator tool.
+
+    Expression:
+    {expression}
+
+    Calculator result:
+    {result}
+
+    Using this result, provide the final answer to the user.
+    Do not mention internal tool execution unless relevant.
+"""

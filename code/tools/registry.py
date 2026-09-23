@@ -1,6 +1,7 @@
 from typing import Any
 
 from code.tools.base import Tool
+from code.tools.protocol import ToolCall, ToolResult
 import logging
 
 logger = logging.getLogger(__name__)
@@ -25,3 +26,27 @@ class ToolRegistry:
 
     def list_tools(self) -> list[Tool]:
         return list(self._tools.values())
+
+    def execute(self, call: ToolCall) -> ToolResult:
+        """
+            Fetch a tool, if it exists in the registry and execute it.
+            Returns a generalised tool call result.
+            this allows the tool registry to own the complete lifecycle of finding and exeucting a tool call
+        """
+        try:
+            # get the tool
+            tool = self.get(call.tool_name)
+            # execute the tool
+            result = tool.execute(**call.arguments)
+
+            logger.info(f"Executed tool call: {call}")
+            return ToolResult(
+                tool_name=call.tool_name,
+                result=result
+            )
+        except Exception as e:
+            logger.exception(f"Encountered an exception while executing tool call to: {call.tool_name} with arguments: {call.arguments}: {e}")
+            return ToolResult(
+                tool_name=call.tool_name,
+                error=str(e)
+            )
