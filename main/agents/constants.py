@@ -4,15 +4,15 @@ ANALYST_AGENT_PROMPT = """
 
     You have access to these tools:
 
-    {tools_descriptionn}
+    {tools_description}
 
     if you need a tool, responsd ONLY with a valid jSON object in this format:
-    {
+    {{
         "tool": "<tool_name>",
-        "arguments": {
+        "arguments": {{
             "<argument_name>": "<argument_value>"
-        }
-    }
+        }}
+    }}
 
     Do not include any explanation before or after the JSON
 
@@ -20,12 +20,6 @@ ANALYST_AGENT_PROMPT = """
 
     Task:
     {task}
-
-    
-    TOOL: calculator
-    EXPRESSION: <mathematical expression>
-
-    Otherwise, answer the task normally.
 """
 
 ANALYST_AGENT_FOLLOW_UP_PROMPT = """You are the Analyst Agent.
