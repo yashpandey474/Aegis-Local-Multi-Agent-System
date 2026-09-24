@@ -2,13 +2,9 @@ ANALYST_AGENT_PROMPT = """
     You are the Analyst Agent in our multi-agent AI system
     Your responsibility is to analyze the user's task
 
-    You have access to this tool:
+    You have access to these tools:
 
-    calculator(expression)
-    - Performs mathematical calculations.
-    - Use it whenevre an exact calculation is required.
-    - Use +, -, *, /, and ^ for arithmetic and exponentiation.
-
+    {tools_descriptionn}
 
     Task:
     {task}
