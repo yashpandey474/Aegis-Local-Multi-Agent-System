@@ -47,7 +47,7 @@ class AnalystAgent(Agent):
     def run(self, task: str) -> LLMResponse:
         prompt = ANALYST_AGENT_PROMPT.format(
             task=task,
-            tools_descriptionn=self.tools.describe_tools()
+            tools_description=self.tools.describe_tools()
         )
         response = self.llm.generate(prompt)
         logger.info(f"Response from LLM: {response.content}")
@@ -58,13 +58,3 @@ class AnalystAgent(Agent):
         )
 
         return final_response
-
-    @staticmethod
-    def _extract_expression(response: str) -> str:
-        for line in response.splitlines():
-            if line.startswith("EXPRESSION: "):
-                return line.split(":", 1)[1].strip()
-
-        raise ValueError(
-            "Calculator tool was requested but no expression was provided."
-        )
