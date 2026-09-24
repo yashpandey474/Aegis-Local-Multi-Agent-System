@@ -10,6 +10,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+"""
+LLM → decides what tool and arguments
+Parser → converts model output into ToolCall
+Registry → finds and executes the tool
+Tool → performs the actual operation
+ToolResult → comes back to the agent
+"""
+
 def main() -> None:
     llm = LocalLLM()
 
