@@ -1,7 +1,7 @@
 from typing import Any
 
-from code.tools.base import Tool
-from code.tools.protocol import ToolCall, ToolResult
+from main.tools.base import Tool
+from main.tools.protocol import ToolCall, ToolResult
 import logging
 
 logger = logging.getLogger(__name__)

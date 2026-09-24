@@ -1,7 +1,7 @@
-from code.llm import LocalLLM
-from code.agents.analyst import AnalystAgent
+from main.llm import LocalLLM
+from main.agents.analyst import AnalystAgent
 import logging
-from code.tools.calculator import CalculatorTool, ToolRegistry
+from main.tools.calculator import CalculatorTool, ToolRegistry
 
 logging.basicConfig(
     level=logging.INFO,
