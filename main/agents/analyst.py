@@ -1,8 +1,10 @@
 from main.agents.base import Agent
 from main.llm.ollama import LLMResponse, LocalLLM
 from main.agents.constants import ANALYST_AGENT_FOLLOW_UP_PROMPT, ANALYST_AGENT_PROMPT
-from main.tools import CalculatorTool, ToolRegistry
+from main.tools import ToolRegistry
 import logging
+
+from main.tools import ToolCall, ToolResult
 
 logger = logging.getLogger(__name__)
 
@@ -20,25 +22,28 @@ class AnalystAgent(Agent):
         self.tools = tools
 
     def run(self, task: str) -> LLMResponse:
-        prompt = ANALYST_AGENT_PROMPT.format(task=task)
+        prompt = ANALYST_AGENT_PROMPT.format(
+            task=task,
+            tools_descriptionn=self.tools.describe_tools()
+        )
         response = self.llm.generate(prompt)
         logger.info(f"Response from LLM: {response.content}")
 
         # LLM Should decide: I need the calculator
         if response.content.startswith("TOOL: calculator"):
-
             # The tool registry should decide if calculator is a registered tool and the arguments are valid
             expression = self._extract_expression(response.content)
-            # This should not sit in the agent, later it'll be an mcp call with
-            calculator = self.tools.get("calculator")
-            result = calculator.execute(expression=expression)
+            result: ToolResult = self.tools.execute(ToolCall(
+                tool_name="calculator",
+                arguments={"expression": expression}
+            ))
             
             logger.info(f"Calculator tool invoked with: {expression}. Result: {result}")
 
             follow_up_prompt = ANALYST_AGENT_FOLLOW_UP_PROMPT.format(
                 task=task,
                 expression=expression,
-                result=result
+                result=result.result
             )
 
             follow_up_response = self.llm.generate(follow_up_prompt)

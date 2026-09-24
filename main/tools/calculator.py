@@ -17,7 +17,10 @@ class CalculatorTool(Tool):
     def __init__(self) -> None:
         super().__init__(
             name="calculator",
-            description="Performs arithmetic calculations"
+            description="""
+            - Performs arithmetic calculations
+            - Arguments: expression
+            """
         )
 
     def execute(self, expression: str) -> float:

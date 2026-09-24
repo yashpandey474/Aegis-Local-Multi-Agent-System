@@ -50,3 +50,13 @@ class ToolRegistry:
                 tool_name=call.tool_name,
                 error=str(e)
             )
+
+    # Automatically extract descriptions of tools into a block to inject into prompt
+    # Similar to how list tools call will work and be used to inject inot prompt in MCP
+    def describe_tools(self) -> str:
+        return "\n".join(
+            f"- {tool.name} : {tool.description}"
+            for tool in self.list_tools()
+        )
+
+    
