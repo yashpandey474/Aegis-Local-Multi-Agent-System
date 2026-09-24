@@ -1,7 +1,7 @@
-from code.agents.base import Agent
-from code.llm.ollama import LLMResponse, LocalLLM
-from code.agents.constants import ANALYST_AGENT_FOLLOW_UP_PROMPT, ANALYST_AGENT_PROMPT
-from code.tools import CalculatorTool, ToolRegistry
+from main.agents.base import Agent
+from main.llm.ollama import LLMResponse, LocalLLM
+from main.agents.constants import ANALYST_AGENT_FOLLOW_UP_PROMPT, ANALYST_AGENT_PROMPT
+from main.tools import CalculatorTool, ToolRegistry
 import logging
 
 logger = logging.getLogger(__name__)

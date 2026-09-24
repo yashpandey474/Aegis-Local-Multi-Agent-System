@@ -1,4 +1,4 @@
-from code.tools.calculator import CalculatorTool
+from main.tools.calculator import CalculatorTool
 
 test_expression = "(18 / 10) ** (1 / 5) - 1"
 

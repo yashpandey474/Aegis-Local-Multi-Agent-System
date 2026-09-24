@@ -1,5 +1,5 @@
 from typing import Any
-from code.tools.base import Tool
+from main.tools.base import Tool
 import ast
 import operator
 
@@ -49,7 +49,7 @@ class CalculatorTool(Tool):
             operator_fn = self.OPERATORS.get(type(node.op))
 
             if operator_fn is None:
-                raise ValueError(f"Unsupported operator: {type(node.jp).__name__}")
+                raise ValueError(f"Unsupported operator: {type(node.op).__name__}")
 
             left = self._evaluate(node.left)
             right = self._evaluate(node.right)

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from code.llm.ollama import LLMResponse
+from main.llm.ollama import LLMResponse
 
 class Agent(ABC):
     def __init__(

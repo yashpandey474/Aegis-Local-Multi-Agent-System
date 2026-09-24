@@ -1,7 +1,7 @@
 
-from code.tools.calculator import CalculatorTool
-from code.tools.protocol import ToolCall
-from code.tools.registry import ToolRegistry
+from main.tools.calculator import CalculatorTool
+from main.tools.protocol import ToolCall
+from main.tools.registry import ToolRegistry
 
 def test_tool_registry_execute():
     tools = ToolRegistry()
@@ -11,7 +11,7 @@ def test_tool_registry_execute():
     call = ToolCall(
         tool_name=tool_name,
         arguments={
-            "expression": "(18/10)&(1/5)-1"
+            "expression": "(18/10)^(1/5)-1"
         }
     )
 

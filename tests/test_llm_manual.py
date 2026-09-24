@@ -1,4 +1,4 @@
-from code.llm import LocalLLM
+from main.llm import LocalLLM
 
 def main() -> None:
     llm = LocalLLM()
