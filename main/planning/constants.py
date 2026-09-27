@@ -19,5 +19,5 @@ PLANNER_PROMPT = """
     ]    
 
     Task:
-    {{task}}
+    {task}
 """
