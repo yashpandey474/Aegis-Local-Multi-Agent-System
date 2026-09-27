@@ -6,3 +6,9 @@ class PlanStep:
     step_id: int
     description: str
     # eventuall wil have more info such as assigned agent and status, result
+
+
+@dataclass(frozen=True)
+class Plan:
+    task: str
+    steps: tuple[PlanStep, ...]
