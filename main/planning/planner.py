@@ -16,6 +16,7 @@ class Planner:
     but we don't want it to control everything
 
     LLM -proposes-> Plan -validation-> Execution
+    The LLM has decision authority, but the application retains execution authority.
     """
     def __init__(self, llm: LocalLLM) -> None:
         self.llm = llm

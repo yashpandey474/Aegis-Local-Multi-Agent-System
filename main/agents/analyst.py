@@ -37,7 +37,9 @@ class AnalystAgent(Agent):
                 result=result.result
             )
 
+            # no more tool calls allowed (should later be configured somewhere?)
             follow_up_response = self.llm.generate(follow_up_prompt)
+            
             logger.info(f"Follow up response from LLM: {follow_up_response}")
             return follow_up_response
         except Exception as e:
@@ -52,6 +54,7 @@ class AnalystAgent(Agent):
         response = self.llm.generate(prompt)
         logger.info(f"Response from LLM: {response.content}")
 
+        # we currently allow just one tool call
         final_response = self.run_tool_call_followup(
             task=task,
             response_content=response.content
