@@ -1,5 +1,7 @@
+from time import perf_counter
+
 from main.agents.analyst import AnalystAgent
-from main.orchestration.models import ExecutionState, StepResult
+from main.orchestration.models import EventType, ExecutionEvent, ExecutionState, ExecutionStatus, StepResult, utc_now
 from main.planning.planner import Planner
 
 class Orchestrator:
@@ -8,22 +10,80 @@ class Orchestrator:
         self.analyst = analyst
 
     def execute(self, task: str) -> ExecutionState:
-        plan = self.planner.create_plan(task)
-        state = ExecutionState(task=task, plan=plan)
 
+        # Latency tracking
+        run_started_at = utc_now()
+        run_clock = perf_counter()
+
+        # Planning
+        planning_clock = perf_counter()
+        plan = self.planner.create_plan(task)
+        planning_duration = perf_counter() - planning_clock
+       
+        state = ExecutionState(task=task, plan=plan, started_at=run_started_at)
+
+        # Track individual events for easier debugging
+        state.events.append(
+            ExecutionEvent(
+                timestamp=run_started_at,
+                event_type=EventType.EXECUTION_STARTED,
+                message="Execution started."
+            )
+        )
+
+        state.events.append(
+            ExecutionEvent(
+                timestamp=utc_now(),
+                event_type=EventType.PLAN_CREATED,
+                message="Plan generated and validated.",
+                duration_seconds=planning_duration,
+            )
+        )
+
+        # Step execution
         for step in plan.steps:
-            step_task = self._build_step_context(state, step.description)
+            # Latency tracking
+            step_started_at = utc_now()
+            step_clock = perf_counter()
+
+            state.events.append(
+                ExecutionEvent(
+                    timestamp=step_started_at,
+                    event_type=EventType.STEP_STARTED,
+                    message=step.description,
+                    step_id=step.step_id,
+                )
+            )
+
 
             try:
+                step_task = self._build_step_context(state, step.description)
+
                 # all steps go to analyst agent
                 # that has a set of rules that it can run
                 response = self.analyst.run(step_task)
+
+                finished_at = utc_now()
+                duration = perf_counter() - step_clock
 
                 state.results.append(
                     StepResult(
                         step_id=step.step_id,
                         success=True,
                         output=response.content,
+                        started_at=step_started_at,
+                        finished_at = finished_at,
+                        duration_seconds=duration
+                    )
+                )
+
+                state.events.append(
+                    ExecutionEvent(
+                        timestamp=finished_at,
+                        event_type=EventType.STEP_SUCCEEDED,
+                        message="Step completed successfully.",
+                        step_id=step.step_id,
+                        duration_seconds=duration,
                     )
                 )
             except Exception as exc:
@@ -32,19 +92,76 @@ class Orchestrator:
                 The plan could have been wrong, the agent being used could be wrong
                 An agentic system is not just about successful execution, it is about behaviour under failure.
                 """
+                finished_at = utc_now()
+                duration = perf_counter() - step_clock
+
                 state.results.append(
                     StepResult(
                         step_id=step.step_id,
                         success=False,
-                        error=str(exc)
+                        error=str(exc),
+                        started_at=step_started_at,
+                        finished_at=finished_at,
+                        duration_seconds=duration,
                     )
                 )
 
+                state.events.append(
+                    ExecutionEvent(
+                        timestamp=finished_at,
+                        event_type=EventType.STEP_FAILED,
+                        message=str(exc),
+                        step_id=step.step_id,
+                        duration_seconds=duration,
+                    )
+                )
+
+                self._finish(
+                    state,
+                    ExecutionStatus.FAILED,
+                    run_clock
+                )
+
                 # stop execution if one step errored out, sequential orchestration
-                break
-        
+                return state
+
+        self._finish(
+            state,
+            ExecutionStatus.SUCCEEDED,
+            run_clock
+        )        
         return state
 
+    @staticmethod
+    def _finish(
+        state: ExecutionState,
+        status: ExecutionStatus,
+        run_clock: float,
+    ) -> None:
+        finished_at = utc_now()
+        duration = perf_counter() - run_clock
+
+        state.status = status
+        state.finished_at = finished_at
+        state.duration_seconds = duration
+
+
+        event_type = (
+            EventType.EXECUTION_SUCCEEDED
+            if status == ExecutionStatus.SUCCEEDED
+            else EventType.EXECUTION_FAILED
+        )
+
+        state.events.append(
+            ExecutionEvent(
+                timestamp=finished_at,
+                event_type=event_type,
+                message=f"Execution {status.value}.",
+                duration_seconds=duration,
+            )
+        )
+        
+        
     @staticmethod
     def _build_step_context(
         state: ExecutionState,
