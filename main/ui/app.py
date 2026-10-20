@@ -20,6 +20,13 @@ if "runs" not in st.session_state:
 if "selected_run_index" not in st.session_state:
     st.session_state["selected_run_index"] = 0
 
+def select_latest_run() -> None:
+    st.session_state["selected_run_index"] = 0
+
+def clear_run_history() -> None:
+    st.session_state["runs"] = []
+    st.session_state["selected_run_index"] = 0
+
 with st.sidebar:
     st.title("Aegis")
     st.caption("Local multi-agent AI system")
@@ -46,10 +53,11 @@ with st.sidebar:
             key="selected_run_index"
         )
 
-        if st.button("Clear run history", use_container_width=True):
-            st.session_state["runs"] = []
-            st.session_state["selected_run_index"] = 0
-            st.rerun()
+        st.button(
+            "Clear run history",
+            use_container_width=True,
+            on_click=clear_run_history,
+        )
     else:
         st.caption("Your completed runs will appear here.")
 
@@ -72,7 +80,8 @@ with st.form("task_form", clear_on_submit=True):
     submitted = st.form_submit_button(
         "Run task",
         type="primary",
-        use_container_width=True
+        use_container_width=True,
+        on_click=select_latest_run
     )
 
 if submitted:
@@ -94,9 +103,6 @@ if submitted:
                     "state": state,
                 },
             )
-
-            # Automatically select the newly completed run.
-            st.session_state["selected_run_index"] = 0
         except Exception as exc:
             st.error(
                 "Aegis could not complete the run. "
@@ -187,4 +193,4 @@ with steps_tab:
                 st.markdown(str(result.output))
             else:
                 st.error(result.error or "Unknown error")
-                
+
