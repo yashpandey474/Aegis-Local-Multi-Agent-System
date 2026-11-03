@@ -53,7 +53,7 @@ class AnalystAgent(Agent):
             logger.info(f"Follow up response from LLM: {follow_up_response}")
             return follow_up_response
 
-    def run(self, task: str) -> LLMResponse:
+    def run(self, task: str) -> AgentResult:
         prompt = ANALYST_AGENT_PROMPT.format(
             task=task,
             tools_description=self.tools.describe_tools()

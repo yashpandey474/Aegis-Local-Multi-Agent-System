@@ -1,6 +1,7 @@
 from time import perf_counter
 
 from main.agents.analyst import AnalystAgent
+from main.agents.results import AgentResult
 from main.orchestration.models import EventType, ExecutionEvent, ExecutionState, ExecutionStatus, StepResult, utc_now
 from main.planning.planner import Planner
 
@@ -19,10 +20,12 @@ class Orchestrator:
         planning_clock = perf_counter()
         plan = self.planner.create_plan(task)
         planning_duration = perf_counter() - planning_clock
-       
+
+        # Plan created
         state = ExecutionState(task=task, plan=plan, started_at=run_started_at)
 
         # Track individual events for easier debugging
+        # Started to execute plan
         state.events.append(
             ExecutionEvent(
                 timestamp=run_started_at,
@@ -31,6 +34,7 @@ class Orchestrator:
             )
         )
 
+        # We should probably have some validation here for the plan
         state.events.append(
             ExecutionEvent(
                 timestamp=utc_now(),
@@ -51,7 +55,7 @@ class Orchestrator:
                     timestamp=step_started_at,
                     event_type=EventType.STEP_STARTED,
                     message=step.description,
-                    step_id=step.step_id,
+                    step_id=step.step_id, # this step was started
                 )
             )
 
@@ -61,16 +65,17 @@ class Orchestrator:
 
                 # all steps go to analyst agent
                 # that has a set of rules that it can run
-                response = self.analyst.run(step_task)
+                agent_response: AgentResult = self.analyst.run(step_task)
 
                 finished_at = utc_now()
                 duration = perf_counter() - step_clock
 
                 state.results.append(
                     StepResult(
+                        agent_name=agent_response.agent_name
                         step_id=step.step_id,
                         success=True,
-                        output=response.content,
+                        output=agent_response.output,
                         started_at=step_started_at,
                         finished_at = finished_at,
                         duration_seconds=duration
@@ -97,6 +102,7 @@ class Orchestrator:
 
                 state.results.append(
                     StepResult(
+                        agent_name=self.analyst.name
                         step_id=step.step_id,
                         success=False,
                         error=str(exc),
