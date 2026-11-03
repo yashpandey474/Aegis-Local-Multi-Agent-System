@@ -129,14 +129,22 @@ st.markdown(f"**Task:** {selected_run['task']}")
 
 successful_steps = sum(result.success for result in state.results)
 
-col1, col2, col3 = st.columns(3)
-col1.metric("Planned steps", len(state.plan.steps))
-col2.metric("Executed steps", len(state.results))
-col3.metric("Successful steps", successful_steps)
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("Status", state.status.value.title())
+col2.metric("Planned steps", len(state.plan.steps))
+col3.metric("Executed steps", len(state.results))
+col4.metric(
+    "Total latency",
+    (
+        f"{state.duration_seconds:.2f}s"
+        if state.duration_seconds is not None
+        else "—"
+    ),
+)
+st.caption(f"Run ID: {state.run_id}")
 
-
-overview_tab, plan_tab, steps_tab = st.tabs(
-    ["Final output", "Plan", "Step-by-step execution"]
+overview_tab, plan_tab, steps_tab, trace_tab = st.tabs(
+    ["Final output", "Plan", "Step-by-step execution", "Event trace"]
 )
 
 
@@ -173,7 +181,10 @@ with steps_tab:
 
     for step in state.plan.steps:
         result = results_by_step.get(step.step_id)
-
+        
+        if result is not None and result.duration_seconds is not None:
+            st.caption(f"Latency: {result.duration_seconds:.3f}s")
+        
         if result is None:
             label = f"Step {step.step_id} · Not executed"
         elif result.success:
@@ -194,3 +205,28 @@ with steps_tab:
             else:
                 st.error(result.error or "Unknown error")
 
+with trace_tab:
+    st.markdown("### Execution events")
+
+    trace_rows = [
+        {
+            "Time (UTC)": event.timestamp.strftime(
+                "%H:%M:%S.%f"
+            )[:-3],
+            "Event": event.event_type.value,
+            "Step": event.step_id,
+            "Duration (s)": (
+                round(event.duration_seconds, 3)
+                if event.duration_seconds is not None
+                else None
+            ),
+            "Details": event.message,
+        }
+        for event in state.events
+    ]
+
+    st.dataframe(
+        trace_rows,
+        use_container_width=True,
+        hide_index=True,
+    )

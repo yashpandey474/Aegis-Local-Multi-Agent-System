@@ -17,7 +17,7 @@ class LocalLLM:
         self.config = config or OllamaConfig()
         self.client = Client(host=self.config.host)
 
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str) -> LLMResponse:
         response = self.client.chat(
             model = self.config.model,
             messages = [

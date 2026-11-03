@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from main.agents.results import AgentResult
 from main.llm.ollama import LLMResponse
 
 class Agent(ABC):
@@ -11,5 +12,5 @@ class Agent(ABC):
         self.description = description
 
     @abstractmethod
-    def run(self, task: str) -> LLMResponse:
+    def run(self, task: str) -> AgentResult: # Not just an LLM response, contains metadata, artifacts
         raise NotImplementedError

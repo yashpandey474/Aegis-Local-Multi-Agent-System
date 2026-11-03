@@ -24,12 +24,12 @@ class Planner:
     def create_plan(self, task: str) -> Plan:
         try:
             prompt = PLANNER_PROMPT.format(task=task)
-            print(f"Prompt sent to planner: {prompt}")
+            # print(f"Prompt sent to planner: {prompt}")
             response = self.llm.generate(prompt)
             data = json.loads(response.content)
 
             plan_steps = tuple(
-                PlanStep(
+                PlanStep( 
                     step_id=step["step_id"],
                     description=step["description"]
                 )

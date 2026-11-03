@@ -56,13 +56,14 @@ class StepResult:
 class ExecutionState:
     task: str
     plan: Plan
+    status: ExecutionStatus = ExecutionStatus.RUNNING
     started_at: datetime = field(default_factory=utc_now)
     finished_at: datetime | None = None
     duration_seconds: float | None = None
     run_id: str = field(default_factory=lambda: str(uuid4()))
     results: list[StepResult] = field(default_factory=list)
     events: list[ExecutionEvent] = field(default_factory=list)
-   
+
     @property
     def success(self) -> bool:
         return self.status == ExecutionStatus.SUCCEEDED
