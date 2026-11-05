@@ -35,5 +35,10 @@ class PlanValidator:
                 raise ValueError(
                             f"Step {step.step_id} has an empty description."
                         )
+
+            if not step.agent_name.strip():
+                raise ValueError(
+                    f"Step {step.step_id} has an empty agent name."
+                )
         
 

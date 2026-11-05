@@ -44,8 +44,8 @@ class ExecutionEvent:
 @dataclass(frozen=True)
 class StepResult:
     step_id: int
-    agent_name: str | None = None # agent name that was executed, allowing traceability at one place
     success: bool
+    agent_name: str | None = None # agent name that was executed, allowing traceability
     output: Any = None
     error: str | None = None
     started_at: datetime | None = None
