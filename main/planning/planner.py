@@ -21,17 +21,25 @@ class Planner:
     def __init__(self, llm: LocalLLM) -> None:
         self.llm = llm
 
-    def create_plan(self, task: str) -> Plan:
+    def create_plan(
+            self,
+            task: str, 
+            available_agents: str # loose coupling, it does not need the entire registry to be passed
+        ) -> Plan:
         try:
-            prompt = PLANNER_PROMPT.format(task=task)
-            # print(f"Prompt sent to planner: {prompt}")
+            prompt = PLANNER_PROMPT.format(
+                task=task, 
+                available_agents=available_agents
+            )
+            
             response = self.llm.generate(prompt)
             data = json.loads(response.content)
 
             plan_steps = tuple(
                 PlanStep( 
                     step_id=step["step_id"],
-                    description=step["description"]
+                    description=step["description"],
+                    agent_name=step["agent_name"]
                 )
                 for step in data
             )
@@ -40,6 +48,7 @@ class Planner:
                 task=task,
                 steps=plan_steps,
             )
+            
         except Exception as e:
             raise Exception(f"Failed to create plan: {e}")
 

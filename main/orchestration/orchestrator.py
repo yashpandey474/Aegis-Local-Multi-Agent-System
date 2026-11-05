@@ -1,14 +1,15 @@
 from time import perf_counter
 
 from main.agents.analyst import AnalystAgent
+from main.agents.registry import AgentRegistry
 from main.agents.results import AgentResult
 from main.orchestration.models import EventType, ExecutionEvent, ExecutionState, ExecutionStatus, StepResult, utc_now
 from main.planning.planner import Planner
 
 class Orchestrator:
-    def __init__(self, planner: Planner, analyst: AnalystAgent) -> None:
+    def __init__(self, planner: Planner, agent_registry: AgentRegistry) -> None:
         self.planner = planner
-        self.analyst = analyst
+        self.agent_registry = agent_registry
 
     def execute(self, task: str) -> ExecutionState:
 
@@ -18,7 +19,11 @@ class Orchestrator:
 
         # Planning
         planning_clock = perf_counter()
-        plan = self.planner.create_plan(task)
+        plan = self.planner.create_plan(
+            task=task,
+            available_agents=self.agent_registry.describe_agents()
+        )
+        
         planning_duration = perf_counter() - planning_clock
 
         # Plan created
@@ -62,17 +67,16 @@ class Orchestrator:
 
             try:
                 step_task = self._build_step_context(state, step.description)
+                step_agent_name = step.agent_name
 
-                # all steps go to analyst agent
-                # that has a set of rules that it can run
-                agent_response: AgentResult = self.analyst.run(step_task)
+                agent_response: AgentResult = self.agent_registry.get(step_agent_name).run(step_task)
 
                 finished_at = utc_now()
                 duration = perf_counter() - step_clock
 
                 state.results.append(
                     StepResult(
-                        agent_name=agent_response.agent_name
+                        agent_name=agent_response.agent_name,
                         step_id=step.step_id,
                         success=True,
                         output=agent_response.output,
@@ -102,7 +106,7 @@ class Orchestrator:
 
                 state.results.append(
                     StepResult(
-                        agent_name=self.analyst.name
+                        agent_name=self.analyst.name,
                         step_id=step.step_id,
                         success=False,
                         error=str(exc),
