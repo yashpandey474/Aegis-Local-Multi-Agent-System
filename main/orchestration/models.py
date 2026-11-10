@@ -21,6 +21,7 @@ class ExecutionStatus(StrEnum):
 class EventType(StrEnum):
     EXECUTION_STARTED = "execution.started"
     PLAN_CREATED = "plan.created"
+    PLAN_VALIDATION_FAILED = "plan.validation.failed"
     STEP_STARTED = "step.started"
     STEP_SUCCEEDED = "step.succeeded"
     STEP_FAILED = "step.failed"

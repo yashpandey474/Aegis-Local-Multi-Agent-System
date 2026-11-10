@@ -1,18 +1,44 @@
 from time import perf_counter
 
-from main.agents.analyst import AnalystAgent
+from main.agents.base import Agent
 from main.agents.registry import AgentRegistry
 from main.agents.results import AgentResult
 from main.orchestration.models import EventType, ExecutionEvent, ExecutionState, ExecutionStatus, StepResult, utc_now
+from main.planning.models import Plan
 from main.planning.planner import Planner
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Orchestrator:
     def __init__(self, planner: Planner, agent_registry: AgentRegistry) -> None:
         self.planner = planner
         self.agent_registry = agent_registry
 
-    def execute(self, task: str) -> ExecutionState:
 
+    def resolve_plan_agents(self, plan: Plan) -> dict[int, Agent]:
+        """
+        preflight validation: checking whether the workflow is executable before performing its operations.
+        Preflight validation reduces wasted computation and prevents avoidable partial execution.
+        """
+
+        """
+        Why are we not storing this on self?
+        Because orchestrator can be used by multiple user interactions at the same time
+        Avoid a race condition
+        """
+        step_agent_mapping = {}
+        for step in plan.steps:
+            try:
+                agent = self.agent_registry.get(step.agent_name)
+            except ValueError as e:
+                raise ValueError(f"Step: {step} mentions using an agent that is not registered: {step.agent_name}: {e}")
+            
+            step_agent_mapping[step.step_id] = agent
+
+        return step_agent_mapping
+    
+    def execute(self, task: str) -> ExecutionState:
         # Latency tracking
         run_started_at = utc_now()
         run_clock = perf_counter()
@@ -49,6 +75,27 @@ class Orchestrator:
             )
         )
 
+        try:
+            step_agent_mapping = self.resolve_plan_agents(plan)
+        except ValueError as e:
+            logger.error(f"Encountered an error while resolving the agents for the plan: {e}")
+            state.events.append(
+                ExecutionEvent(
+                    timestamp=utc_now(),
+                    event_type=EventType.PLAN_VALIDATION_FAILED,
+                    message=f"Invalid agent in plan, pre-flight validation failed: {e}",
+
+                )
+            )
+
+            self._finish(
+                state,
+                ExecutionStatus.FAILED,
+                run_clock
+            )
+
+            return state
+
         # Step execution
         for step in plan.steps:
             # Latency tracking
@@ -67,9 +114,9 @@ class Orchestrator:
 
             try:
                 step_task = self._build_step_context(state, step.description)
-                step_agent_name = step.agent_name
+                agent = step_agent_mapping[step.step_id]
 
-                agent_response: AgentResult = self.agent_registry.get(step_agent_name).run(step_task)
+                agent_response: AgentResult = agent.run(step_task)
 
                 finished_at = utc_now()
                 duration = perf_counter() - step_clock
@@ -106,7 +153,7 @@ class Orchestrator:
 
                 state.results.append(
                     StepResult(
-                        agent_name=self.analyst.name,
+                        agent_name=step.agent_name,
                         step_id=step.step_id,
                         success=False,
                         error=str(exc),
