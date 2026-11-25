@@ -12,7 +12,7 @@ A production system should be able to answer:
 This is called data provenance.
 """
 
-@dataclass
+@dataclass(frozen=True)
 class SourceReference:
     """
     The original source from which evidence was extracted
@@ -20,8 +20,7 @@ class SourceReference:
     """
     source_id: str # stable identifier for the source
     title: str # Human-readable source title
-    source_tyoe: str | None = None # eg: annual report, research paper
-    locator: str | None = None # page no, section etc
+    source_type: str | None = None # eg: annual report, research paper
     uri: str  | None = None# original url or source uri
     metadata: dict = field(default_factory=dict) # additional source info
 
@@ -30,6 +29,8 @@ class Evidence:
     evidence_id: str
     excerpt: str # original source content
     source: SourceReference
+    locator: str | None = None # page no, section etc
+
 
 @dataclass(frozen=True)
 class ResearchFinding:
@@ -45,3 +46,15 @@ class ResearchResult:
     findings: tuple[ResearchFinding, ...] # atomic, traceable claims
     evidence: tuple[Evidence, ...] # original supporting info
     limitations: tuple[str, ...] = () # gaps, missing sources or incomplete coverage
+
+@dataclass(frozen=True)
+class DocumentSection:
+    """A logical unit of a document"""
+    text: str
+    locator: str | None = None
+
+@dataclass(frozen=True)
+class SourceDocument:
+    """A parsed original document"""
+    source: SourceReference
+    sections: tuple[DocumentSection, ...]
