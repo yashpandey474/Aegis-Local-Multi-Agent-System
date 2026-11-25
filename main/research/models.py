@@ -58,3 +58,11 @@ class SourceDocument:
     """A parsed original document"""
     source: SourceReference
     sections: tuple[DocumentSection, ...]
+
+@dataclass(frozen=True)
+class DocumentChunk:
+    chunk_id: str
+    text: str
+    source: SourceReference
+    chunk_index: int
+    locator: str | None = None
